@@ -54,6 +54,9 @@ interface HistoryStore {
   canStepBack: () => boolean;
   setThumbnail: (id: string, dataUrl: string) => void;
   clear: () => void;
+  /** Replace the timeline wholesale with versions restored from a saved project
+   *  (no milestone recorded, no clear-on-load). Geometries are owned by the store. */
+  hydrate: (versions: Version[], activeId: string | null) => void;
 }
 
 /** Geometries still referenced by the live edit store — never dispose these. */
@@ -140,5 +143,12 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     const keep = liveGeometries();
     for (const v of get().versions) disposeGeo(v.geometry, keep);
     set({ versions: [], activeId: null });
+  },
+
+  hydrate: (versions, activeId) => {
+    // Drop whatever was here first (project switch already cleared, but be safe).
+    const keep = liveGeometries();
+    for (const v of get().versions) disposeGeo(v.geometry, keep);
+    set({ versions, activeId: activeId ?? (versions.length ? versions[versions.length - 1].id : null) });
   },
 }));

@@ -112,6 +112,13 @@ export interface MachineProfile {
   coolingFanNumber?: number;
   startGcode?: string;
   endGcode?: string;
+  // Printhead silhouette offsets from the nozzle (Cura head polygon) + gantry
+  // height. Used to inset the reachable print area and as a Z clearance limit.
+  headXMin?: number;
+  headYMin?: number;
+  headXMax?: number;
+  headYMax?: number;
+  gantryHeight?: number;
 }
 
 /**
@@ -194,6 +201,8 @@ export interface SliceResult {
   estimatedTimeMinutes: number;
   filamentUsageMm: number;
   filamentUsageGrams: number;
+  /** Non-fatal issues (e.g. model larger than the build volume). */
+  warnings?: string[];
 }
 
 type SlicerBackend = "cura" | "prusa" | "ts-fallback" | "none";

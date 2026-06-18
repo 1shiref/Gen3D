@@ -19,7 +19,10 @@ export interface ProjectStore {
   markSaved: (id: string) => void;
   loadRecentProjects: () => void;
   addRecentProject: (p: RecentProject) => void;
+  removeRecentProject: (id: string) => void;
   newProject: () => void;
+  /** Point the store at an existing (restored) project. */
+  setCurrentProject: (id: string, name: string) => void;
 }
 
 const RECENT_KEY = "g3d-recent-projects";
@@ -50,10 +53,21 @@ export const useProjectStore = create<ProjectStore>((set) => ({
     });
   },
 
+  removeRecentProject: (id) => {
+    set((state) => {
+      const updated = state.recentProjects.filter((r) => r.id !== id);
+      try { localStorage.setItem(RECENT_KEY, JSON.stringify(updated)); } catch {}
+      return { recentProjects: updated };
+    });
+  },
+
   newProject: () =>
     set({
       currentProjectId: uuidv4(),
       currentProjectName: "Untitled Project",
       isDirty: false,
     }),
+
+  setCurrentProject: (id, name) =>
+    set({ currentProjectId: id, currentProjectName: name, isDirty: false }),
 }));

@@ -70,6 +70,15 @@ interface MeshEditStore {
   applyRestoredGeometry: (geo: THREE.BufferGeometry) => Promise<void>;
   undo: () => void;
   reset: () => void;
+  /** Seed base/working geometry from a restored project WITHOUT recording a
+   *  milestone or re-normalizing (unlike setBaseGeometry). History is hydrated
+   *  separately by the project loader. */
+  hydrateFromProject: (payload: {
+    baseGeometry: THREE.BufferGeometry | null;
+    workingGeometry: THREE.BufferGeometry | null;
+  }) => void;
+  /** Full wipe for a blank project: drops + disposes base/working/parts geometry. */
+  clearAll: () => void;
 
   startDraft: (featureId: string, initial?: FeatureParams) => void;
   updateDraftParam: (key: string, value: FeatureParams[string]) => void;
@@ -203,6 +212,31 @@ export const useMeshEditStore = create<MeshEditStore>((set, get) => ({
     // The previous display geometry isn't referenced by history (it keeps clones), so free it.
     disposeIfOrphan(prev, [get().baseGeometry, geo]);
     await syncEditedStl(geo);
+  },
+
+  hydrateFromProject: ({ baseGeometry, workingGeometry }) => {
+    disposePartGeometries(get().parts);
+    set({
+      baseGeometry,
+      workingGeometry,
+      draft: null,
+      error: null,
+      parts: null,
+      selectedPartId: null,
+    });
+    useViewerStore.getState().resetTransform();
+    const display = workingGeometry ?? baseGeometry;
+    if (display) refreshBounds(display);
+  },
+
+  clearAll: () => {
+    const { baseGeometry, workingGeometry, parts } = get();
+    disposePartGeometries(parts);
+    if (workingGeometry && workingGeometry !== baseGeometry) workingGeometry.dispose();
+    baseGeometry?.dispose();
+    set({ baseGeometry: null, workingGeometry: null, draft: null, parts: null, selectedPartId: null, error: null });
+    useViewerStore.getState().resetTransform();
+    useGenerationStore.getState().setEditedStlUrl(null);
   },
 
   // Undo walks the version timeline back one step (Ctrl+Z); no new version is appended.

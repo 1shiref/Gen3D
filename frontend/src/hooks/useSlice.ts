@@ -76,6 +76,11 @@ export function useSlice() {
           coolingFanNumber: printer.coolingFanNumber,
           startGcode: printer.startGcode,
           endGcode: printer.endGcode,
+          headXMin: printer.headXMin,
+          headYMin: printer.headYMin,
+          headXMax: printer.headXMax,
+          headYMax: printer.headYMax,
+          gantryHeight: printer.gantryHeight,
         },
       });
 
@@ -92,6 +97,16 @@ export function useSlice() {
         title: "Slicing complete",
         description: `${result.stats.layerCount} layers · ~${result.stats.estimatedTimeMinutes} min`,
       });
+
+      // The model is auto-centered on the bed, but if it's larger than the build
+      // volume the print would still run off the bed — surface that to the user.
+      if (result.warnings && result.warnings.length > 0) {
+        toast({
+          title: "Model may not fit the printer",
+          description: result.warnings.join(" "),
+          variant: "destructive",
+        });
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Slicing failed";
       exportStore.setSliceError(msg);

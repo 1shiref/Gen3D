@@ -55,7 +55,12 @@ export interface EmitResult {
  * z-hop, combing threshold, cooling) and — when a machine profile is supplied —
  * its Start/End G-code, origin-at-center offset, G-code flavor, and fan number.
  */
-export function emitGcode(layers: SliceLayer[], s: SlicerSettings, machine?: MachineProfile): EmitResult {
+export function emitGcode(
+  layers: SliceLayer[],
+  s: SlicerSettings,
+  machine?: MachineProfile,
+  offset: { x: number; y: number } = { x: 0, y: 0 },
+): EmitResult {
   const lines: string[] = [];
   const filamentDia = machine?.filamentDiameter ?? s.filamentDiameter;
   const filamentArea = Math.PI * (filamentDia / 2) ** 2;
@@ -63,9 +68,10 @@ export function emitGcode(layers: SliceLayer[], s: SlicerSettings, machine?: Mac
   const retractF = s.retractionSpeed * 60;
   const retractMinTravel = s.combingMode === "off" ? 0.5 : 2.0;
 
-  // Origin-at-center shifts model coords (min at 0) to a centre-origin machine.
-  const ox = machine?.originAtCenter ? -(machine.bedWidth ?? 0) / 2 : 0;
-  const oy = machine?.originAtCenter ? -(machine.bedDepth ?? 0) / 2 : 0;
+  // Placement offset that drops the model onto the bed (computed in sliceStl from
+  // the model bounds + machine dimensions, honouring origin-at-center).
+  const ox = offset.x;
+  const oy = offset.y;
 
   // Fan command honours the machine's cooling fan index.
   const fanNum = machine?.coolingFanNumber ?? 0;

@@ -87,6 +87,7 @@ router.post("/slice", async (req, res) => {
         filamentUsageMm: result.filamentUsageMm,
         filamentUsageGrams: result.filamentUsageGrams,
       },
+      warnings: result.warnings ?? [],
       preview: result.gcodeContent.split("\n").slice(0, 100).join("\n"),
     });
   } catch (err: unknown) {

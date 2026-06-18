@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import type { GenerationStatus } from "@/lib/constants";
 
+/**
+ * Sentinel `stlUrl` used when a saved project is restored from IndexedDB. The
+ * geometry is hydrated straight into the stores (no URL to fetch), so the viewer
+ * must mount without re-loading/normalizing — ModelMesh early-returns on this.
+ */
+export const RESTORED_SENTINEL = "restored://memory";
+
 export interface DimensionCheck {
   actual: { x: number; y: number; z: number };
   declared: { x: number; y: number; z: number } | null;
@@ -66,6 +73,16 @@ export interface GenerationStore {
   setReferenceImageUrl: (url: string | null) => void;
   setError: (msg: string) => void;
   reset: () => void;
+  /** Full wipe for starting a blank project (clears model + inputs, not just status). */
+  hardReset: () => void;
+  /** Seed the store from a restored project (sets stlUrl to the restore sentinel). */
+  hydrateForRestore: (payload: {
+    prompt: string;
+    modelSource: "generated" | "uploaded" | null;
+    referenceImageUrl: string | null;
+    boundingBox: { x: number; y: number; z: number } | null;
+    editedStlUrl: string | null;
+  }) => void;
 }
 
 export const useGenerationStore = create<GenerationStore>((set) => ({
@@ -130,5 +147,37 @@ export const useGenerationStore = create<GenerationStore>((set) => ({
       errorMessage: null,
       printabilityWarnings: [],
       referenceImageUrl: null,
+    }),
+  hardReset: () =>
+    set({
+      images: [],
+      prompt: "",
+      selectedEngines: [],
+      forceProviderId: null,
+      status: "idle",
+      statusMessage: null,
+      stlUrl: null,
+      editedStlUrl: null,
+      previewUrl: null,
+      boundingBox: null,
+      dimensionCheck: null,
+      materialSuggestion: null,
+      printabilityWarnings: [],
+      suggestedDimensions: null,
+      errorMessage: null,
+      referenceImageUrl: null,
+      modelSource: null,
+    }),
+  hydrateForRestore: ({ prompt, modelSource, referenceImageUrl, boundingBox, editedStlUrl }) =>
+    set({
+      prompt,
+      modelSource,
+      referenceImageUrl,
+      boundingBox,
+      editedStlUrl,
+      stlUrl: RESTORED_SENTINEL,
+      status: "done",
+      statusMessage: null,
+      errorMessage: null,
     }),
 }));

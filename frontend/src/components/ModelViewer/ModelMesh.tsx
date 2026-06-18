@@ -6,7 +6,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as THREE from "three";
 import { useViewerStore } from "@/stores/viewerStore";
 import { useMeshEditStore, partColor, type MeshPart } from "@/stores/meshEditStore";
-import { useGenerationStore } from "@/stores/generationStore";
+import { useGenerationStore, RESTORED_SENTINEL } from "@/stores/generationStore";
 import { getSelectedPrinter } from "@/stores/printerStore";
 import { normalizeModelSize } from "@/lib/normalize-size";
 import { useToast } from "@/hooks/useToast";
@@ -86,6 +86,7 @@ export default function ModelMesh({ stlUrl, onLoaded }: Props) {
   const draft = useMeshEditStore((s) => s.draft);
   const setBaseGeometry = useMeshEditStore((s) => s.setBaseGeometry);
   const workingGeometry = useMeshEditStore((s) => s.workingGeometry);
+  const baseGeometry = useMeshEditStore((s) => s.baseGeometry);
   const parts = useMeshEditStore((s) => s.parts);
   const selectedPartId = useMeshEditStore((s) => s.selectedPartId);
   const meshRef = useRef<THREE.Mesh>(null);
@@ -96,6 +97,14 @@ export default function ModelMesh({ stlUrl, onLoaded }: Props) {
   // not BufferGeometry directly, and we want one uniform pipeline downstream.
   useEffect(() => {
     let cancelled = false;
+    // Restored projects hydrate geometry straight into the stores — there's no
+    // URL to fetch, and re-loading would re-normalize + wipe the restored history.
+    if (stlUrl === RESTORED_SENTINEL) {
+      setError(null);
+      setGeometry(null);
+      onLoaded?.();
+      return;
+    }
     const fmt = detectFormat(stlUrl);
     setError(null);
     setGeometry(null);
@@ -233,7 +242,9 @@ export default function ModelMesh({ stlUrl, onLoaded }: Props) {
   }
 
   // Locally mesh-edited geometry takes precedence over the URL-loaded one.
-  const displayGeometry = workingGeometry ?? geometry;
+  // On a restored project there's no URL-loaded `geometry`, so fall back to the
+  // hydrated base geometry from the store.
+  const displayGeometry = workingGeometry ?? geometry ?? baseGeometry;
   if (!displayGeometry) return null;
 
   const [sx, sy, sz] = modelTransform.scale;

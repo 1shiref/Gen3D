@@ -19,6 +19,12 @@ export interface MachineSliceProfile {
   coolingFanNumber?: number;
   startGcode?: string;
   endGcode?: string;
+  // Printhead clearance (Cura head polygon) + gantry height.
+  headXMin?: number;
+  headYMin?: number;
+  headXMax?: number;
+  headYMax?: number;
+  gantryHeight?: number;
 }
 
 export interface SliceRequest {
@@ -39,6 +45,8 @@ export interface SliceResponse {
     filamentUsageMm: number;
     filamentUsageGrams: number;
   };
+  /** Non-fatal issues (e.g. model larger than the build volume). */
+  warnings?: string[];
   preview: string;
 }
 

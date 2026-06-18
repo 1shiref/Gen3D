@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Keyboard, HelpCircle } from "lucide-react";
 import { useKeyboard } from "@/hooks/useKeyboard";
+import { useProjectAutosave } from "@/hooks/useProjectAutosave";
+import { openMostRecentOrNew } from "@/lib/project-actions";
+import ProjectMenu from "@/components/Project/ProjectMenu";
 import InputPanel from "@/components/InputPanel";
 import ModelViewer from "@/components/ModelViewer";
 import EditPanel from "@/components/EditPanel";
@@ -16,8 +19,17 @@ import HelpTip from "@/components/UI/HelpTip";
 
 export default function App() {
   useKeyboard();
+  useProjectAutosave();
   const [exportExpanded, setExportExpanded] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // On first mount, open the most-recent project (or start a fresh one).
+  const bootstrapped = useRef(false);
+  useEffect(() => {
+    if (bootstrapped.current) return;
+    bootstrapped.current = true;
+    void openMostRecentOrNew();
+  }, []);
 
   useEffect(() => {
     const onExport = () => setExportExpanded(true);
@@ -34,9 +46,19 @@ export default function App() {
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 border-b border-border bg-card shrink-0 z-10">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <a
+            href={`//${location.hostname}/`}
+            title="Back to Mainsail"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent"
+          >
+            ← Mainsail
+          </a>
+          <span className="h-5 w-px bg-border" />
           <span className="text-lg font-bold text-primary">Gen3D</span>
-          <span className="text-xs text-muted-foreground">AI 3D Model Generator</span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">AI 3D Model Generator</span>
+          <span className="h-5 w-px bg-border" />
+          <ProjectMenu />
         </div>
         <div className="flex items-center gap-2">
           <AIStatusBadge />

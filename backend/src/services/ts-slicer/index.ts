@@ -17,6 +17,8 @@ export interface SliceResult {
   estimatedTimeMinutes: number;
   filamentUsageMm: number;
   filamentUsageGrams: number;
+  /** Non-fatal issues (e.g. model larger than the build volume). */
+  warnings?: string[];
 }
 
 const MATERIAL_DENSITY: Record<string, number> = {
@@ -27,6 +29,65 @@ export function sliceStl(stlPath: string, settings: SlicerSettings, machine?: Ma
   const buffer = fs.readFileSync(stlPath);
   const triangles = parseStl(buffer);
   const bounds = getStlBounds(triangles);
+
+  // ---- Place the model inside the build volume -----------------------------
+  // The STL arrives with arbitrary coordinates (wherever the mesh happened to
+  // sit). Position it on the bed so the printer never receives out-of-range
+  // moves: center the XY footprint and rest the bottom on Z = 0.
+  const bedW = machine?.bedWidth ?? 0;
+  const bedD = machine?.bedDepth ?? 0;
+  const modelCx = (bounds.min.x + bounds.max.x) / 2;
+  const modelCy = (bounds.min.y + bounds.max.y) / 2;
+  const sizeX = bounds.max.x - bounds.min.x;
+  const sizeY = bounds.max.y - bounds.min.y;
+  const sizeZ = bounds.max.z - bounds.min.z;
+
+  // Printhead clearance: the head silhouette extends beyond the nozzle, so the
+  // nozzle can't drive all the way to the bed edges without the head leaving the
+  // machine. Inset the reachable rectangle by those clearances (Cura head
+  // polygon). Only the negative-X / positive-X (and Y) extents reduce reach.
+  // Guard: ignore values that would collapse the area (e.g. placeholder head
+  // polygons that span the whole bed) and fall back to the full bed.
+  const clrLeft = Math.max(0, -(machine?.headXMin ?? 0)); // head reaches -X of nozzle
+  const clrRight = Math.max(0, machine?.headXMax ?? 0); // head reaches +X of nozzle
+  const clrBack = Math.max(0, -(machine?.headYMin ?? 0)); // head reaches -Y of nozzle
+  const clrFront = Math.max(0, machine?.headYMax ?? 0); // head reaches +Y of nozzle
+
+  // Reachable rectangle for the nozzle, in corner (0..bed) coordinates.
+  let pMinX = 0, pMaxX = bedW, pMinY = 0, pMaxY = bedD;
+  if (bedW > 0 && bedW - clrLeft - clrRight >= sizeX && bedW - clrLeft - clrRight > 0) {
+    pMinX = clrLeft; pMaxX = bedW - clrRight;
+  }
+  if (bedD > 0 && bedD - clrBack - clrFront >= sizeY && bedD - clrBack - clrFront > 0) {
+    pMinY = clrBack; pMaxY = bedD - clrFront;
+  }
+
+  // Center the model within the reachable rectangle (origin-at-center machines
+  // measure from the bed centre, so shift the corner-space target by -bed/2).
+  const targetCornerCx = (pMinX + pMaxX) / 2;
+  const targetCornerCy = (pMinY + pMaxY) / 2;
+  const targetCx = machine?.originAtCenter ? targetCornerCx - bedW / 2 : targetCornerCx;
+  const targetCy = machine?.originAtCenter ? targetCornerCy - bedD / 2 : targetCornerCy;
+  // Fall back to "corner at 0" when no bed size is known, so coords stay >= 0.
+  const dx = bedW > 0 ? targetCx - modelCx : -bounds.min.x;
+  const dy = bedD > 0 ? targetCy - modelCy : -bounds.min.y;
+  const dz = -bounds.min.z;
+
+  // ---- Fit check (center + warn): still slice, but flag oversized models ----
+  // Gantry height limits how tall a part can pass under the X-gantry, so the
+  // effective build height is the smaller of bed height and gantry height.
+  const warnings: string[] = [];
+  const r1 = (n: number) => Math.round(n * 10) / 10;
+  const maxZ = Math.min(
+    machine?.bedHeight && machine.bedHeight > 0 ? machine.bedHeight : Infinity,
+    machine?.gantryHeight && machine.gantryHeight > 0 ? machine.gantryHeight : Infinity,
+  );
+  if (bedW > 0 && sizeX > bedW)
+    warnings.push(`Model is ${r1(sizeX)}mm wide but the bed is only ${bedW}mm — rescale before printing.`);
+  if (bedD > 0 && sizeY > bedD)
+    warnings.push(`Model is ${r1(sizeY)}mm deep but the bed is only ${bedD}mm — rescale before printing.`);
+  if (isFinite(maxZ) && sizeZ > maxZ)
+    warnings.push(`Model is ${r1(sizeZ)}mm tall but the usable build height is only ${maxZ}mm — rescale before printing.`);
 
   // ---- Layer Z plan (layer 0 uses the initial layer height) ----------------
   const zs: Array<{ z: number; thickness: number }> = [];
@@ -86,11 +147,13 @@ export function sliceStl(stlPath: string, settings: SlicerSettings, machine?: Ma
 
     const ordered = orderPaths(paths, cursor);
     if (ordered.length > 0) cursor = ordered[ordered.length - 1].pts.slice(-1)[0];
-    layers.push({ z: zs[i].z, thickness: zs[i].thickness, paths: ordered });
+    // Slicing runs on the original geometry; only the emitted Z is shifted so the
+    // first layer prints at the initial layer height instead of the model's min Z.
+    layers.push({ z: zs[i].z + dz, thickness: zs[i].thickness, paths: ordered });
   }
 
   // ---- Emit ----------------------------------------------------------------
-  const { gcode, filamentMm, estimatedMinutes } = emitGcode(layers, settings, machine);
+  const { gcode, filamentMm, estimatedMinutes } = emitGcode(layers, settings, machine, { x: dx, y: dy });
 
   const filamentDia = machine?.filamentDiameter ?? settings.filamentDiameter;
   const filamentArea = Math.PI * (filamentDia / 2) ** 2;
@@ -103,6 +166,7 @@ export function sliceStl(stlPath: string, settings: SlicerSettings, machine?: Ma
     estimatedTimeMinutes: estimatedMinutes,
     filamentUsageMm: Math.round(filamentMm),
     filamentUsageGrams: Math.round(filamentGrams * 10) / 10,
+    warnings: warnings.length > 0 ? warnings : undefined,
   };
 }
 

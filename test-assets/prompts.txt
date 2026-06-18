@@ -1,0 +1,54 @@
+Gen3D — manual test prompts
+===========================
+
+A. Generation prompts (Input panel → Text Prompt → Generate)
+------------------------------------------------------------
+1.  A 50mm x 30mm x 20mm rectangular box with rounded corners (4mm radius).
+2.  A 40mm-diameter cylinder, 25mm tall, with a 10mm-diameter hole through the center.
+3.  A simple hexagonal nut, M10 thread approximation, 16mm across flats, 8mm thick.
+4.  A name tag plate 60mm x 25mm x 3mm with a 4mm hole for a lanyard near one short edge.
+5.  A 30mm cube with chamfered top edges (3mm chamfer).
+6.  A small pencil holder: 60mm tall, 50mm outer diameter, 3mm wall thickness, open top.
+7.  A keychain disc 30mm diameter, 4mm thick, with a 4mm hanging hole 4mm from the rim.
+
+B. Vision prompts (use with one of the test PNGs)
+-------------------------------------------------
+NOTE: cube-front.png and cube-side.png show a single face — without a clarifying
+prompt the AI may correctly interpret them as flat plates. cube-iso.png shows
+the cube in 3/4 view with three shaded faces and is the right fixture for
+"give me a cube" testing. Pair single-face images with a 3D-intent prompt.
+
+8.  Treat the image as a 30mm cube viewed at 3/4 angle; produce the matching cube.
+9.  The image shows one face of a 3D object — produce a 30mm cube with that face on the front.
+10. Reproduce the 3D object shown in this image as a printable model, ~30mm on its longest side.
+    Keep wall thickness >= 2mm if hollow.
+11. Generate a printable 3D model matching the silhouette in the photo, extruded
+    perpendicular to the page by 20mm.
+
+C. Multi-view prompts (use cube-front.png + cube-side.png + cube-iso.png together, Multi-view ON)
+-------------------------------------------------------------------------------------------------
+11. Fuse the three views into a single 3D model approximately 30mm on each side.
+12. Use the front, side, and 3/4 views to reconstruct a printable 3D model.
+
+D. Edit prompts (after a model is loaded — chat panel on the right)
+-------------------------------------------------------------------
+13. Make it 20% taller.
+14. Add a hole of 5mm diameter through the center.
+15. Round all corners with 2mm fillet.
+16. Make it hollow with 2mm walls.
+17. Scale to 50% size.
+18. Add a 3mm chamfer to the top edges.
+19. Cut the model in half along the X axis.
+20. Add a 10mm cylindrical boss on top, 5mm tall.
+
+E. STL upload tests (Input panel → "Drop a 3D model")
+-----------------------------------------------------
+- Drop cube-20mm.stl    → should display a solid 20mm cube; Edit panel should be available.
+- Drop pyramid-ascii.stl → tests ASCII STL parsing (single triangle, you'll see a flat shape).
+- Drop triangle.obj      → tests the OBJ loader path.
+
+F. Sanity / negative cases
+--------------------------
+- Drop an unsupported file (e.g. .txt) → should show "Upload rejected" toast.
+- Generate with no prompt and no images → button should still fire, backend returns NO_INPUT error.
+- Toggle Multi-view ON with only 1 image → toggle should be disabled (need >= 2 images).

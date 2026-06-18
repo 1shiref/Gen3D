@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gen3d": {
+      "command": "npx",
+      "args": ["-y", "tsx", "backend/src/mcp/server.ts"]
+    }
+  }
+}

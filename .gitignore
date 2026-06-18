@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+backend/uploads/
+backend/runtime-models.json
+backend/runtime-settings.json
+*.stl
+*.gcode
+*.zip
+*.log
+.DS_Store

@@ -15,19 +15,7 @@ Pi's IP address (e.g. `192.168.1.50`) wherever you see it.
 
 ## Overview — what you're building
 
-```
-                 Raspberry Pi (one box)
-   ┌──────────────────────────────────────────────────┐
-   │  Klipper  ──USB──►  Printer control board (MCU)   │
-   │     ▲                                             │
-   │  Moonraker  (API, :7125)                          │
-   │     ▲           ▲                                 │
-   │  Mainsail (:80) │   Gen3D backend (:3001) ────────┼──► AI APIs (Claude, fal, HF…)
-   │                 └── "Send to Printer" uploads     │
-   │  Crowsnest camera (:8080 → /webcam)               │
-   └──────────────────────────────────────────────────┘
-                 ▲ your browser on the same Wi-Fi
-```
+<img width="680" height="1020" alt="gen3d_hardware_flow_v4 (1)" src="https://github.com/user-attachments/assets/0c3372a1-44dd-4c4a-aaba-e282e2b8f695" />
 
 - **Klipper** — printer firmware (runs on the Pi, talks to the printer board over USB).
 - **Moonraker** — the API layer in front of Klipper (port `7125`).

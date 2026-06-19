@@ -16,10 +16,8 @@ fal.ai / Replicate). Text-only prompts are first turned into a reference image u
 
 ## Architecture
 
-```
 <img width="1360" height="2040" alt="gen3d_hardware_flow_v4 (1)" src="https://github.com/user-attachments/assets/0c3372a1-44dd-4c4a-aaba-e282e2b8f695" />
 
-```
 
 ## Quick Start (app only)
 

@@ -16,19 +16,9 @@ fal.ai / Replicate). Text-only prompts are first turned into a reference image u
 
 ## Architecture
 
-<img width="2720" height="4080" alt="gen3d_hardware_flow_v4 (1)" src="https://github.com/user-attachments/assets/0c3372a1-44dd-4c4a-aaba-e282e2b8f695" />
-
-
 ```
-                 Raspberry Pi (one box)
-   Klipper ──USB──► printer board (MCU)
-      ▲
-   Moonraker (:7125)
-      ▲         ▲
-   Mainsail (:80)   Gen3D backend (:3001) ──► AI APIs (Claude, fal, HF, …)
-                    └─ "Send to Printer" uploads G-code to Moonraker
-   Crowsnest camera (:8080 → /webcam)
-            ▲ your browser on the same Wi-Fi
+<img width="1360" height="2040" alt="gen3d_hardware_flow_v4 (1)" src="https://github.com/user-attachments/assets/0c3372a1-44dd-4c4a-aaba-e282e2b8f695" />
+
 ```
 
 ## Quick Start (app only)

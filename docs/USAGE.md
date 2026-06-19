@@ -48,15 +48,6 @@ You can jump to the printer UI any time; Gen3D and Mainsail link back to each ot
 
 ---
 
-## Keyboard shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+G` | Generate model |
-| `Ctrl+S` | Save project |
-| `Ctrl+Z` | Undo edit |
-| `Ctrl+E` | Export G-code |
-| `?` | Show shortcuts |
 
 ## API endpoints (for the curious / integrations)
 

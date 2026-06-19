@@ -143,12 +143,3 @@ Projects are saved as `.t2p` JSON files containing the inputs, the current model
 
 ---
 
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+G` | Generate model |
-| `Ctrl+S` | Save project |
-| `Ctrl+Z` | Undo edit |
-| `Ctrl+E` | Export G-code |
-| `?` | Show shortcuts |

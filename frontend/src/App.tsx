@@ -3,6 +3,7 @@ import { Keyboard, HelpCircle } from "lucide-react";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import { useProjectAutosave } from "@/hooks/useProjectAutosave";
 import { openMostRecentOrNew } from "@/lib/project-actions";
+import { goToMainsail } from "@/lib/mainsail";
 import ProjectMenu from "@/components/Project/ProjectMenu";
 import InputPanel from "@/components/InputPanel";
 import ModelViewer from "@/components/ModelViewer";
@@ -47,13 +48,13 @@ export default function App() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 border-b border-border bg-card shrink-0 z-10">
         <div className="flex items-center gap-3">
-          <a
-            href={`//${location.hostname}/`}
+          <button
+            onClick={goToMainsail}
             title="Back to Mainsail"
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded hover:bg-accent"
           >
             ← Mainsail
-          </a>
+          </button>
           <span className="h-5 w-px bg-border" />
           <span className="text-lg font-bold text-primary">Gen3D</span>
           <span className="hidden text-xs text-muted-foreground sm:inline">AI 3D Model Generator</span>

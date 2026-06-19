@@ -112,6 +112,11 @@ export const config = {
   slicerPath: process.env.SLICER_PATH ?? "",
   uploadMaxAgeMs: parseInt(process.env.UPLOAD_MAX_AGE_MS ?? "600000", 10),
   uploadsDir: path.resolve(__dirname, "../uploads"),
+
+  // Moonraker (Klipper printer API) — used to push sliced G-code to the printer's
+  // gcodes folder and optionally start a print. Defaults to the local instance,
+  // which trusts localhost so no API key is needed.
+  moonrakerUrl: (process.env.MOONRAKER_URL ?? "http://localhost:7125").replace(/\/+$/, ""),
 };
 
 // ── FallbackEntry — one slot in the priority chain ────────────

@@ -119,6 +119,8 @@ export interface MachineProfile {
   headXMax?: number;
   headYMax?: number;
   gantryHeight?: number;
+  /** Safety clearance (mm) kept from every bed edge when placing the model. */
+  marginMm?: number;
 }
 
 /**

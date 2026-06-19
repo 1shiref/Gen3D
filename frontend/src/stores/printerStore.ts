@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import {
   BUILTIN_PROFILES, MACHINE_FACTORY, GEN3D_PRINTER_ID, type PrinterProfile,
 } from "@/lib/printer-profiles";
+import { uuid } from "@/lib/uuid";
 import { useExportStore } from "@/stores/exportStore";
 
 /** Fields a user can set when creating/editing a custom printer. */
@@ -86,10 +87,7 @@ export const usePrinterStore = create<PrinterStore>()(
       },
 
       addPrinter: (data) => {
-        const id =
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `printer-${Date.now()}`;
+        const id = uuid();
         const printer: PrinterProfile = { ...data, id, builtIn: false };
         set((s) => ({ customPrinters: [...s.customPrinters, printer], selectedId: id }));
         syncExport(printer);

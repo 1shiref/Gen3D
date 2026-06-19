@@ -1,0 +1,19 @@
+[Unit]
+Description=Gen3D — AI 3D model generator & G-code exporter
+Documentation=https://github.com/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gen3d
+WorkingDirectory=/home/gen3d/gen3d/backend
+# Built backend also serves the built frontend (frontend/dist) on the same port.
+# Port and API keys are read from /home/gen3d/gen3d/backend/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

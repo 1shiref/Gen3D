@@ -35,6 +35,8 @@ export interface SliceRequest {
   machine?: MachineSliceProfile;
   /** Per-axis scale to bake into the STL before slicing. Omit for [1,1,1]. */
   scale?: [number, number, number];
+  /** Safety clearance (mm) kept from every bed edge when placing the model. */
+  marginMm?: number;
 }
 
 export interface SliceResponse {
@@ -208,6 +210,29 @@ export async function sliceModel(req: SliceRequest): Promise<SliceResponse> {
 
 export async function checkHealth(): Promise<HealthResponse> {
   const res = await fetch(`${BASE}/health`);
+  return res.json();
+}
+
+/**
+ * Push a sliced G-code file to the Moonraker/Klipper printer. With `print: true`
+ * it is saved to the printer's gcodes folder AND the print is started; otherwise
+ * it is only saved (and shows up in Mainsail's G-Code Files).
+ */
+export async function sendToPrinter(req: {
+  gcodeUrl: string;
+  name?: string;
+  print?: boolean;
+}): Promise<{ filename: string; printStarted: boolean }> {
+  const res = await fetch(`${BASE}/print`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    let msg = await res.text();
+    try { msg = JSON.parse(msg).error ?? msg; } catch { /* keep raw text */ }
+    throw new Error(msg);
+  }
   return res.json();
 }
 

@@ -179,11 +179,20 @@ export function offsetLoop(loop: Loop, d: number): Loop | null {
   }
 
   // New vertex j = intersection of offset edge (j-1) and offset edge (j).
+  // Cap the miter: when adjacent edges are (near-)collinear their offset edges
+  // are almost parallel, so the intersection shoots far away (a spike that lands
+  // thousands of mm off the part). Beyond the limit, bevel by using the offset
+  // point itself — which is exactly the correct vertex for collinear edges.
+  const miterLimit = Math.abs(d) * 4 + 1;
   const out: Pt[] = [];
   for (let j = 0; j < n; j++) {
     const i = (j - 1 + n) % n;
     const p = lineIntersect(offsetA[i], offsetDir[i], offsetA[j], offsetDir[j]);
-    out.push(p ?? offsetA[j]);
+    if (p && Math.hypot(p.x - offsetA[j].x, p.y - offsetA[j].y) <= miterLimit) {
+      out.push(p);
+    } else {
+      out.push(offsetA[j]);
+    }
   }
 
   const origCCW = signedArea(loop) > 0;

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { create } from "zustand";
 import { exportAsStl } from "@/lib/mesh-convert";
+import { uuid } from "@/lib/uuid";
 import { uploadModel } from "@/lib/api";
 import { useGenerationStore } from "@/stores/generationStore";
 import { useViewerStore, IDENTITY_TRANSFORM, type ModelTransform } from "@/stores/viewerStore";
@@ -27,8 +28,7 @@ export interface MeshPart {
 export const PART_COLORS = ["#4f9dff", "#ff8a4f", "#57c785", "#c77dff", "#ffd24f", "#ff6b8a", "#4fd6d6", "#9ca3af"];
 export const partColor = (i: number): string => PART_COLORS[((i % PART_COLORS.length) + PART_COLORS.length) % PART_COLORS.length];
 
-const newPartId = () =>
-  (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `part-${Math.random().toString(36).slice(2)}`);
+const newPartId = () => `part-${uuid()}`;
 
 /** A fresh identity transform with its own arrays (never share IDENTITY_TRANSFORM's arrays). */
 const identityTransform = (): ModelTransform => ({

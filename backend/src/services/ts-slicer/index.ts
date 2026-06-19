@@ -62,6 +62,20 @@ export function sliceStl(stlPath: string, settings: SlicerSettings, machine?: Ma
     pMinY = clrBack; pMaxY = bedD - clrFront;
   }
 
+  // Uniform safety margin: keep the model `margin` away from every bed edge so a
+  // print never runs off the printer. Applied on top of the head clearance, but
+  // only while the part still fits — never collapse the area for an oversized
+  // model (those are flagged in the fit check below and centered as best we can).
+  const margin = Math.max(0, machine?.marginMm ?? 0);
+  if (margin > 0) {
+    if (pMaxX - pMinX - 2 * margin >= sizeX && pMaxX - pMinX - 2 * margin > 0) {
+      pMinX += margin; pMaxX -= margin;
+    }
+    if (pMaxY - pMinY - 2 * margin >= sizeY && pMaxY - pMinY - 2 * margin > 0) {
+      pMinY += margin; pMaxY -= margin;
+    }
+  }
+
   // Center the model within the reachable rectangle (origin-at-center machines
   // measure from the bed centre, so shift the corner-space target by -bed/2).
   const targetCornerCx = (pMinX + pMaxX) / 2;
@@ -82,10 +96,14 @@ export function sliceStl(stlPath: string, settings: SlicerSettings, machine?: Ma
     machine?.bedHeight && machine.bedHeight > 0 ? machine.bedHeight : Infinity,
     machine?.gantryHeight && machine.gantryHeight > 0 ? machine.gantryHeight : Infinity,
   );
-  if (bedW > 0 && sizeX > bedW)
-    warnings.push(`Model is ${r1(sizeX)}mm wide but the bed is only ${bedW}mm — rescale before printing.`);
-  if (bedD > 0 && sizeY > bedD)
-    warnings.push(`Model is ${r1(sizeY)}mm deep but the bed is only ${bedD}mm — rescale before printing.`);
+  // Compare against the usable area (bed minus the safety margin on each side).
+  const usableW = bedW > 0 ? Math.max(0, bedW - 2 * margin) : 0;
+  const usableD = bedD > 0 ? Math.max(0, bedD - 2 * margin) : 0;
+  const note = (bed: number) => (margin > 0 ? ` (${bed}mm − ${margin}mm each side)` : "");
+  if (usableW > 0 && sizeX > usableW)
+    warnings.push(`Model is ${r1(sizeX)}mm wide but the usable bed is ${r1(usableW)}mm${note(bedW)} — rescale before printing.`);
+  if (usableD > 0 && sizeY > usableD)
+    warnings.push(`Model is ${r1(sizeY)}mm deep but the usable bed is ${r1(usableD)}mm${note(bedD)} — rescale before printing.`);
   if (isFinite(maxZ) && sizeZ > maxZ)
     warnings.push(`Model is ${r1(sizeZ)}mm tall but the usable build height is only ${maxZ}mm — rescale before printing.`);
 

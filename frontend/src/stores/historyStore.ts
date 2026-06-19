@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { create } from "zustand";
 import { useMeshEditStore } from "@/stores/meshEditStore";
 import type { FeatureParams } from "@/lib/mesh-edit/features";
+import { uuid } from "@/lib/uuid";
 
 /** Keep at most this many versions; oldest non-milestone entries are evicted + disposed. */
 const CAP = 20;
@@ -96,7 +97,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   record: (input) => {
     if (input.isMilestone) get().clear();
     const version: Version = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       timestamp: Date.now(),
       label: input.label,
       source: input.source,
@@ -112,7 +113,7 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
     if (!target) return;
     const snapshot = target.geometry.clone();
     const version: Version = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       timestamp: Date.now(),
       label: `Restored: ${target.label}`,
       source: "restore",

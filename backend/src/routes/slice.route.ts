@@ -22,12 +22,14 @@ router.post("/slice", async (req, res) => {
       printerPreset = "custom",
       machine,
       scale,
+      marginMm,
     } = req.body as {
       stlPath?: string;
       settings?: Partial<SlicerSettings>;
       printerPreset?: string;
       machine?: MachineProfile;
       scale?: [number, number, number];
+      marginMm?: number;
     };
 
     if (!stlRef || typeof stlRef !== "string") {
@@ -74,7 +76,13 @@ router.post("/slice", async (req, res) => {
       mergedSettings.filamentDiameter = machine.filamentDiameter;
     }
 
-    const result = await sliceToGcode(stlPath, mergedSettings, machine);
+    // Safety clearance from the bed edges (frontend default 5mm). Fold it into the
+    // machine profile so the slicer insets placement and warns using the same value.
+    const safeMargin =
+      typeof marginMm === "number" && isFinite(marginMm) && marginMm >= 0 ? marginMm : 5;
+    const effectiveMachine: MachineProfile = { ...(machine ?? {}), marginMm: safeMargin };
+
+    const result = await sliceToGcode(stlPath, mergedSettings, effectiveMachine);
 
     const gcodePath = tempPath(".gcode");
     fs.writeFileSync(gcodePath, result.gcodeContent, "utf-8");

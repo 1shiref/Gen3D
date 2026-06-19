@@ -1,24 +1,54 @@
 # Gen3D — AI-Powered 3D Model Generator & G-Code Exporter
 
-Accept an image or text → AI generates a 3D mesh → edit → slice to G-code → print.
+Accept an image or text → AI generates a 3D mesh → edit → slice to G-code → **send straight
+to your 3D printer**. Designed to run on a Raspberry Pi alongside the Klipper printer stack
+(Klipper + Moonraker + Mainsail + Crowsnest camera).
 
 Generation runs neural image-to-3D models (Hunyuan3D-2 on Hugging Face, plus optional
 fal.ai / Replicate). Text-only prompts are first turned into a reference image, then meshed.
 
-## Quick Start
+## 📖 Documentation
+
+- **[Full Setup Guide](docs/SETUP.md)** — start here. From a blank SD card → Raspberry Pi
+  OS → Klipper/Moonraker/Mainsail/Crowsnest → Gen3D → API keys → auto-start on boot.
+- **[Usage Guide](docs/USAGE.md)** — how to generate, edit, slice, and print.
+- **[Reference printer configs](printer-config/)** — a real-world Klipper config to adapt.
+
+## Architecture
+
+```
+                 Raspberry Pi (one box)
+   Klipper ──USB──► printer board (MCU)
+      ▲
+   Moonraker (:7125)
+      ▲         ▲
+   Mainsail (:80)   Gen3D backend (:3001) ──► AI APIs (Claude, fal, HF, …)
+                    └─ "Send to Printer" uploads G-code to Moonraker
+   Crowsnest camera (:8080 → /webcam)
+            ▲ your browser on the same Wi-Fi
+```
+
+## Quick Start (app only)
+
+> For the complete Pi + printer setup, follow **[docs/SETUP.md](docs/SETUP.md)**.
 
 ### 1. Prerequisites
 
 - **Node.js** ≥ 18
-- **Anthropic API Key** (for the natural-language mesh-edit planner): https://console.anthropic.com
+- **One AI reasoning key** (for the mesh-edit planner): Anthropic, OpenRouter→Claude, or
+  AgentRouter. Free/local tiers (OpenRouter-free, Groq, Ollama) also work with
+  `ALLOW_WEAK_MODELS=true`.
 - **Optional mesh providers** for faster/more reliable image-to-3D and text-to-image:
   - `FAL_KEY` (https://fal.ai) — recommended primary
   - `REPLICATE_API_TOKEN` (https://replicate.com)
   - `HF_TOKEN` (https://huggingface.co) — bigger free quota on the keyless Hugging Face Space
+- *(For printing)* a reachable **Moonraker** instance (`MOONRAKER_URL`, default
+  `http://localhost:7125`).
 
 ### 2. Clone & Install
 
 ```bash
+git clone https://github.com/1shiref/Gen3D.git gen3d
 cd gen3d
 npm install
 ```
@@ -27,13 +57,15 @@ npm install
 
 ```bash
 cp .env.example backend/.env
-# Edit backend/.env and add your ANTHROPIC_API_KEY
+# Edit backend/.env and add at least one AI key (see comments in the file).
 ```
 
 ### 4. Run
 
 ```bash
-npm run dev
+npm run dev          # dev: frontend :5173 + backend :3001
+# or production (backend also serves the built frontend on PORT):
+npm run build && node backend/dist/index.js
 ```
 
 Frontend: http://localhost:5173  
@@ -56,9 +88,10 @@ npm run check-deps
 | State | Zustand |
 | UI | Tailwind CSS + Radix UI |
 | Backend | Node.js + Express + TypeScript |
-| AI | Anthropic Claude API (mesh-edit planner) |
+| AI (reasoning) | Claude via Anthropic / OpenRouter / AgentRouter, with Groq · Ollama fallbacks |
 | 3D Generation | Neural image-to-3D (Hunyuan3D-2 / fal.ai / Replicate) |
 | Slicer | CuraEngine / PrusaSlicer / TypeScript fallback |
+| Printing | Moonraker / Klipper (Send to Printer); Mainsail UI |
 
 ---
 
@@ -93,8 +126,23 @@ npm run check-deps
 | POST | `/api/generate` | Generate model candidates (SSE stream) |
 | POST | `/api/plan-edit` | Plan natural-language mesh edits |
 | POST | `/api/slice` | Slice STL to G-code |
+| POST | `/api/print` | Send sliced G-code to the printer (Moonraker) |
 | GET | `/api/files/:filename` | Serve STL/G-code files |
 | GET | `/api/export/zip` | Download project ZIP |
+
+---
+
+## Run on Boot (Raspberry Pi)
+
+Install Gen3D as a systemd service so it auto-starts:
+
+```bash
+sudo bash deploy/install-autostart.sh   # installs deploy/gen3d.service
+journalctl -u gen3d -f                   # live logs
+sudo systemctl restart gen3d             # after pulling new code / editing .env
+```
+
+See [docs/SETUP.md](docs/SETUP.md) for the full Raspberry Pi + printer walkthrough.
 
 ---
 

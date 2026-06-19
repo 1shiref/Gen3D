@@ -1,9 +1,12 @@
 node_modules/
 dist/
 .env
+.env.local
 backend/uploads/
 backend/runtime-models.json
 backend/runtime-settings.json
+# Secrets: TOTP/session secrets live here — never publish.
+backend/data/
 *.stl
 *.gcode
 *.zip

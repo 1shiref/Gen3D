@@ -1,6 +1,7 @@
 import SlicerSettings from "./SlicerSettings";
 import PrinterPresets from "./PrinterPresets";
 import SliceButton from "./SliceButton";
+import SendToPrinter from "./SendToPrinter";
 import SliceStats from "./SliceStats";
 import GcodePreview from "./GcodePreview";
 import DownloadButtons from "./DownloadButtons";
@@ -20,6 +21,7 @@ export default function ExportPanel() {
         <SliceButton />
         {slicing && <ProcessLog variant="inline" showWhenIdle={false} />}
         <SliceStats />
+        <SendToPrinter />
       </div>
 
       {/* Download + Preview column */}

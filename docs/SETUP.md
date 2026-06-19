@@ -174,9 +174,6 @@ with **no key** (slower, via a public Hugging Face Space).
 | **Anthropic** (direct) | `ANTHROPIC_API_KEY` | Paid, best quality | https://console.anthropic.com |
 | **OpenRouter → Claude** | `OPENROUTER_API_KEY` + `OPENROUTER_CLAUDE_MODEL` | Paid (pay-as-you-go) | https://openrouter.ai/keys |
 | **AgentRouter** ("cloud") | `AGENTROUTER_API_KEY` | Gateway → Claude | your AgentRouter dashboard |
-| OpenRouter (free models) | `OPENROUTER_API_KEY` + `ALLOW_WEAK_MODELS=true` | Free, lower quality | https://openrouter.ai/keys |
-| Groq | `GROQ_API_KEY` + `ALLOW_WEAK_MODELS=true` | Free, fast, lower quality | https://console.groq.com |
-| Ollama | *(none — local)* + `ALLOW_WEAK_MODELS=true` | Free, runs on the Pi/PC | https://ollama.com |
 
 Gen3D tries these in a **6-tier fallback chain** automatically — the first configured,
 working provider wins. The free/local tiers (4–6) are **off by default** so quality never

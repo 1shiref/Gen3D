@@ -4,8 +4,8 @@ Accept an image or text → AI generates a 3D mesh → edit → slice to G-code 
 to your 3D printer**. Designed to run on a Raspberry Pi alongside the Klipper printer stack
 (Klipper + Moonraker + Mainsail + Crowsnest camera).
 
-Generation runs neural image-to-3D models (Hunyuan3D-2 on Hugging Face, plus optional
-fal.ai / Replicate). Text-only prompts are first turned into a reference image, then meshed.
+Generation runs AI image-to-3D models (Hunyuan3D-2 on Hugging Face, plus optional
+fal.ai / Replicate). Text-only prompts are first turned into a reference image using Flux, then meshed.
 
 ## 📖 Documentation
 
